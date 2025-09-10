@@ -1,3 +1,6 @@
+
+<img width="1461" height="1079" alt="screenplay" src="https://github.com/user-attachments/assets/7932bf4f-d553-44b4-be52-f49ae69cedee" />
+
 # Multiplayer Game Platform
 
 A cross-platform multiplayer game platform where players can join shared game sessions using private URLs and room keys. Inspired by Jackbox-style mechanics with original titles.
