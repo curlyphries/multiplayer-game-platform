@@ -62,7 +62,7 @@ multiplayer-game-platform/
 
 **Step 1: Clone Repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/curlyphries/multiplayer-game-platform
 cd multiplayer-game-platform
 ```
 
@@ -90,7 +90,7 @@ docker-compose ps
 
 **Step 1: Clone Repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/curlyphries/multiplayer-game-platform
 cd multiplayer-game-platform
 ```
 
