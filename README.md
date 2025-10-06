@@ -6,6 +6,7 @@
 A cross-platform multiplayer game platform where players can join shared game sessions using private URLs and room keys. Inspired by Jackbox-style mechanics with original titles.
 
 ## Table of Contents
+- [Quick Start](#installation--setup)
 - [Prerequisites](#prerequisites)
 - [Project Structure](#project-structure)
 - [Installation & Setup](#installation--setup)
@@ -15,16 +16,25 @@ A cross-platform multiplayer game platform where players can join shared game se
 - [Environment Configuration](#environment-configuration)
 - [Development Status](#development-status)
 
+## 📚 Documentation
+- **[INSTALLATION-GUIDE.md](INSTALLATION-GUIDE.md)** - Detailed installation instructions with troubleshooting
+- **[DOCKER-RUNTIME-FIX.md](DOCKER-RUNTIME-FIX.md)** - Fix Docker nvidia-container-runtime errors
+- **[ISSUE_TRACKER.md](ISSUE_TRACKER.md)** - Known issues and resolutions
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - General troubleshooting guide
+
 ## Prerequisites
 
 ### Required Software
-- **Docker & Docker Compose** (recommended) OR
-- **Node.js** v18+ and **npm** v9+
+- **Node.js** v18+ and **npm** v9+ (required)
 - **Git** for version control
 - **Modern web browser** (Chrome, Firefox, Safari, Edge)
 
+### Optional Software
+- **Docker & Docker Compose** (for containerized deployment)
+- **Redis** (for session persistence - app works without it)
+
 ### System Requirements
-- **Ports**: 4000 (frontend), 4001 (backend), 6379 (Redis)
+- **Ports**: 4000 (frontend), 4001 (backend), 6379 (Redis - optional)
 - **Memory**: 2GB RAM minimum
 - **Storage**: 1GB free space
 
@@ -58,70 +68,79 @@ multiplayer-game-platform/
 
 ## Installation & Setup
 
-### Option 1: Docker Setup (Recommended)
+### 🚀 Quick Start (Automated - Recommended)
 
-**Step 1: Clone Repository**
+**One-command setup with automatic fallback:**
+
 ```bash
 git clone https://github.com/curlyphries/multiplayer-game-platform
 cd multiplayer-game-platform
+chmod +x setup.sh
+./setup.sh
 ```
 
-**Step 2: Start Services**
+The setup script will:
+- ✅ Check prerequisites (Node.js v18+)
+- ✅ Create environment files automatically
+- ✅ Install all dependencies
+- ✅ Detect and fix common Docker issues
+- ✅ Start services (Docker or local fallback)
+- ✅ Verify everything is working
+
+**That's it!** Open http://localhost:4000 to start playing.
+
+---
+
+### Option 1: Docker Setup
+
+**Prerequisites:** Docker & Docker Compose installed
+
 ```bash
-# Start all containers in background
+git clone https://github.com/curlyphries/multiplayer-game-platform
+cd multiplayer-game-platform
+
+# Start all containers
 docker-compose up -d
 
-# View startup logs
+# View logs
 docker-compose logs -f
 ```
 
-**Step 3: Verify Installation**
-```bash
-# Check container status
-docker-compose ps
+**⚠️ Docker Issues?** If you encounter `nvidia-container-runtime` errors, see [DOCKER-RUNTIME-FIX.md](DOCKER-RUNTIME-FIX.md) or use the automated setup script.
 
-# Should show 3 containers running:
-# - backend (port 4001)
-# - frontend (port 4000) 
-# - redis (port 6379)
+**Stop services:**
+```bash
+docker-compose down
 ```
+
+---
 
 ### Option 2: Local Development Setup
 
-**Step 1: Clone Repository**
+**Prerequisites:** Node.js v18+ and npm v9+
+
+**Manual Setup:**
 ```bash
 git clone https://github.com/curlyphries/multiplayer-game-platform
 cd multiplayer-game-platform
-```
 
-**Step 2: Backend Setup**
-```bash
+# Backend setup
 cd backend
-
-# Create environment file
-copy .env.example .env
-# On Mac/Linux: cp .env.example .env
-
-# Install dependencies
+cp .env.example .env
 npm install
+npm run dev &
 
-# Start development server
-npm run dev
+# Frontend setup (new terminal)
+cd frontend
+cp .env.example .env
+npm install
+npm run dev &
 ```
 
-**Step 3: Frontend Setup** (New Terminal)
+**Stop services:**
 ```bash
-cd frontend
-
-# Create environment file
-copy .env.example .env
-# On Mac/Linux: cp .env.example .env
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+./stop.sh
+# Or manually: kill the node processes
 ```
 
 ## Running the Application
@@ -200,61 +219,87 @@ docker-compose logs -f --tail=100
 
 ## Troubleshooting
 
+### 🔧 Quick Fixes
+
+**Installation Issues?** Run the automated setup script:
+```bash
+./setup.sh
+```
+
+**Services Not Starting?** Use the stop script and try again:
+```bash
+./stop.sh
+./setup.sh
+```
+
+---
+
 ### Common Issues
 
-**1. Blank Frontend Page**
-- **Cause**: Build errors or missing dependencies
-- **Solution**:
-  ```bash
-  # Check build logs
-  docker-compose logs frontend
-  
-  # Rebuild containers
-  docker-compose down
-  docker-compose up -d --build
-  ```
+**1. Docker Runtime Error (nvidia-container-runtime)**
+- **Error**: `exec: "nvidia-container-runtime": executable file not found in $PATH`
+- **Cause**: Docker configured for NVIDIA runtime but not installed
+- **Solution**: See [DOCKER-RUNTIME-FIX.md](DOCKER-RUNTIME-FIX.md) or run `./setup.sh` which auto-fixes this
 
 **2. Port Already in Use**
 - **Cause**: Another service using ports 4000/4001
 - **Solution**:
   ```bash
-  # Find process using port
-  netstat -ano | findstr :4000
+  # Linux/Mac - Find and kill process
+  lsof -ti:4000 | xargs kill -9
+  lsof -ti:4001 | xargs kill -9
   
-  # Kill process (replace PID)
+  # Windows
+  netstat -ano | findstr :4000
   taskkill /PID <PID> /F
   ```
 
 **3. Cannot Connect to Backend**
-- **Cause**: CORS issues or backend not running
+- **Cause**: Backend not running or CORS issues
 - **Solution**:
   ```bash
-  # Check backend status
-  curl http://localhost:4001/api/health
+  # Check backend health
+  curl http://localhost:4001/health
   
-  # Check backend logs
+  # Check backend logs (Docker)
   docker-compose logs backend
+  
+  # Check backend logs (Local)
+  tail -f backend.log
   ```
 
-**4. Redis Connection Failed**
-- **Cause**: Redis container not running
+**4. Blank Frontend Page**
+- **Cause**: Build errors or missing dependencies
 - **Solution**:
   ```bash
-  # Restart Redis
+  # Docker: Rebuild containers
+  docker-compose down
+  docker-compose up -d --build
+  
+  # Local: Reinstall dependencies
+  cd frontend
+  rm -rf node_modules package-lock.json
+  npm install
+  npm run dev
+  ```
+
+**5. Redis Connection Failed**
+- **Note**: Redis is **optional** - the app works without it
+- **Solution**: 
+  ```bash
+  # Docker: Restart Redis
   docker-compose restart redis
   
-  # Check Redis logs
-  docker-compose logs redis
+  # Local: Redis not required for basic functionality
+  # App will run fine without Redis
   ```
 
-**5. Build Failures**
-- **Cause**: Missing dependencies or syntax errors
-- **Solution**:
+**6. Missing .env Files**
+- **Cause**: Environment files not created
+- **Solution**: Run setup script or manually:
   ```bash
-  # Clean rebuild
-  docker-compose down -v
-  docker-compose build --no-cache
-  docker-compose up -d
+  cp backend/.env.example backend/.env
+  cp frontend/.env.example frontend/.env
   ```
 
 ### Debug Commands
